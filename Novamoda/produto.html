@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Produto — NovaModa</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- LOADER INTELIGENTE -->
+<div id="loader">
+    <div class="spinner"></div>
+</div>
+
+  <header id="menu">
+    <div class="container navbar">
+      <img src="Yellow_Black_Brush_Streetwear_Brand_Logo-removebg-preview.png" class="logo-menu">
+    </div>
+  </header>
+
+  <main class="container" style="padding-top:110px">
+    <div id="produtoWrap" style="display:flex;gap:24px;align-items:flex-start">
+      <div style="flex:1">
+        <img id="produtoImg" src="https://images.unsplash.com/photo-1519751138087-5bf79df62d5b?q=80&w=1200" style="width:100%;border-radius:12px">
+      </div>
+      <div style="width:360px">
+        <h2 id="produtoTitulo">Camiseta Nova</h2>
+        <p id="produtoPreco" style="color:var(--accent);font-weight:800">R$129,90</p>
+        <p>Descrição curta do produto. Tamanhos, material e detalhes.</p>
+        <button class="btn primary">Adicionar ao carrinho</button>
+      </div>
+    </div>
+  </main>
+  <script src="js/product.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/favorites.js"></script>
+<script src="js/animations.js"></script>
+<section id="novidades" class="produtos-lista"></section>
+
+</body>
+</html>
