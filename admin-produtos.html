@@ -388,249 +388,246 @@
   <script src="js/auth.js"></script>
   <script src="js/admin.js"></script>
   
+  <!-- Scripts -->
+  <script src="js/admin-api.js"></script>
+  
   <script>
     /**
-     * Admin Produtos - CORRIGIDO COM API PHP
+     * Admin Produtos - VERSÃO FINAL
      */
-    class AdminProdutos {
-      constructor() {
-        this.API_BASE = '/api/admin/produtos';
-        this.API_PRODUTOS = '/api/produtos/listar.php';
-        this.currentProductId = null;
-        this.init();
-      }
+    const API_BASE = window.location.origin + '/Novamoda/api';
+    let currentProductId = null;
 
-      async loadProducts() {
-        try {
-          const response = await fetch(this.API_PRODUTOS);
-          const data = await response.json();
-          
-          if (data.success) {
-            this.renderProducts(data.data);
-          } else {
-            this.showToast('Erro ao carregar produtos', 'error');
-          }
-        } catch (error) {
-          console.error('Erro:', error);
-          this.showToast('Erro de conexão', 'error');
-        }
-      }
+    // ==========================================
+    // CARREGAR PRODUTOS
+    // ==========================================
+    async function carregarProdutos() {
+      const grid = document.getElementById('productsGrid');
+      if (!grid) return;
 
-      renderProducts(products) {
-        const grid = document.getElementById('productsGrid');
-        
-        if (products.length === 0) {
-          grid.innerHTML = `
-            <div style="grid-column:1/-1;text-align:center;padding:60px;color:#888;">
-              <div style="font-size:4rem;margin-bottom:20px;">📦</div>
-              <h3>Nenhum produto cadastrado</h3>
-              <p>Clique em "Novo Produto" para adicionar</p>
-            </div>
-          `;
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#888;">⏳ Carregando produtos...</div>';
+
+      try {
+        const response = await fetch(`${API_BASE}/produtos/listar.php?limit=100`);
+        const data = await response.json();
+
+        if (!data.success || !data.data || data.data.length === 0) {
+          grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:#888;"><div style="font-size:4rem;margin-bottom:20px;">📦</div><h3>Nenhum produto cadastrado</h3><p>Clique em "Novo Produto" para adicionar</p></div>';
           return;
         }
 
-        grid.innerHTML = products.map(p => {
-          const stockStatus = this.getStockStatus(p.estoque);
+        grid.innerHTML = data.data.map(p => {
+          const stockColor = p.estoque > 10 ? '#4ade80' : (p.estoque > 0 ? '#fbbf24' : '#ff3b30');
+          const stockLabel = p.estoque > 10 ? 'Em Estoque' : (p.estoque > 0 ? 'Estoque Baixo' : 'Esgotado');
           
           return `
-            <div class="product-card">
-              <img src="${p.imagem_principal || 'https://via.placeholder.com/400'}" 
-                   alt="${p.nome}" 
-                   class="product-image">
-              <div class="product-info">
-                <div class="product-name">${this.escapeHtml(p.nome)}</div>
-                <div class="product-price">
-                  R$ ${this.formatMoney(p.preco)}
-                  ${p.preco_antigo ? `<span style="font-size:14px;color:#666;text-decoration:line-through;margin-left:8px;">R$ ${this.formatMoney(p.preco_antigo)}</span>` : ''}
+            <div class="product-card" style="background:#111;border:1px solid #222;border-radius:12px;overflow:hidden;transition:all 0.2s;">
+              <img src="${p.imagem_principal}" style="width:100%;height:200px;object-fit:cover;" alt="${p.nome}" onerror="this.src='https://via.placeholder.com/400x200/14d0d6/000?text=${encodeURIComponent(p.nome)}'">
+              <div style="padding:16px;">
+                <h3 style="color:#fff;font-size:16px;margin:0 0 8px 0;line-height:1.3;">${p.nome}</h3>
+                <div style="color:#14d0d6;font-size:20px;font-weight:800;margin-bottom:8px;">
+                  R$ ${parseFloat(p.preco).toFixed(2).replace('.', ',')}
                 </div>
-                <div class="product-meta">
-                  <span>Categoria: ${p.categoria_nome || 'Sem categoria'}</span>
+                <div style="display:flex;gap:8px;font-size:13px;color:#888;margin-bottom:12px;align-items:center;">
+                  <span style="color:${stockColor};">● ${stockLabel}: ${p.estoque}</span>
+                  <span>•</span>
+                  <span>${p.categoria_nome || 'Sem categoria'}</span>
                 </div>
-                <span class="product-stock ${stockStatus.class}">${stockStatus.label}: ${p.estoque}</span>
-                <div class="product-actions" style="margin-top:15px;">
-                  <button class="btn btn-primary" onclick="adminProdutos.editProduct(${p.id})">Editar</button>
-                  <button class="btn btn-danger" onclick="adminProdutos.deleteProduct(${p.id})">Excluir</button>
+                <div style="display:flex;gap:8px;">
+                  <button class="btn btn-primary" onclick="editarProduto(${p.id})" style="flex:1;padding:8px;font-size:13px;">
+                    ✏️ Editar
+                  </button>
+                  <button class="btn btn-danger" onclick="deletarProduto(${p.id}, '${p.nome.replace(/'/g, "\\'")}', ${p.estoque})" style="padding:8px 12px;font-size:13px;">
+                    🗑️
+                  </button>
                 </div>
               </div>
             </div>
           `;
         }).join('');
-      }
 
-      getStockStatus(estoque) {
-        if (estoque === 0) return { class: 'stock-out', label: 'Sem Estoque' };
-        if (estoque <= 10) return { class: 'stock-low', label: 'Estoque Baixo' };
-        return { class: 'stock-high', label: 'Em Estoque' };
-      }
-
-      async createProduct(formData) {
-        try {
-          const response = await fetch(`${this.API_BASE}/criar.php`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
-          });
-
-          const data = await response.json();
-
-          if (data.success) {
-            this.showToast('✓ Produto criado com sucesso!', 'success');
-            this.closeModal();
-            this.loadProducts();
-          } else {
-            this.showToast(data.message || 'Erro ao criar produto', 'error');
-          }
-        } catch (error) {
-          console.error('Erro:', error);
-          this.showToast('Erro de conexão', 'error');
-        }
-      }
-
-      async updateProduct(id, formData) {
-        try {
-          const response = await fetch(`${this.API_BASE}/atualizar.php`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, ...formData })
-          });
-
-          const data = await response.json();
-
-          if (data.success) {
-            this.showToast('✓ Produto atualizado!', 'success');
-            this.closeModal();
-            this.loadProducts();
-          } else {
-            this.showToast(data.message || 'Erro ao atualizar', 'error');
-          }
-        } catch (error) {
-          console.error('Erro:', error);
-          this.showToast('Erro de conexão', 'error');
-        }
-      }
-
-      async deleteProduct(id) {
-        if (!confirm('⚠️ Tem certeza que deseja deletar este produto?')) return;
-
-        try {
-          const response = await fetch(`${this.API_BASE}/deletar.php`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id })
-          });
-
-          const data = await response.json();
-
-          if (data.success) {
-            this.showToast('✓ Produto deletado!', 'success');
-            this.loadProducts();
-          } else {
-            this.showToast(data.message || 'Erro ao deletar', 'error');
-          }
-        } catch (error) {
-          console.error('Erro:', error);
-          this.showToast('Erro de conexão', 'error');
-        }
-      }
-
-      openAddModal() {
-        this.currentProductId = null;
-        document.getElementById('modalTitle').textContent = 'Novo Produto';
-        document.getElementById('productForm').reset();
-        document.getElementById('productModal').classList.add('show');
-      }
-
-      async editProduct(id) {
-        this.currentProductId = id;
-        document.getElementById('modalTitle').textContent = 'Editar Produto';
-        
-        try {
-          const response = await fetch(`/api/produtos/detalhes.php?id=${id}`);
-          const data = await response.json();
-          
-          if (data.success) {
-            const p = data.data;
-            
-            document.getElementById('productName').value = p.nome;
-            document.getElementById('productPrice').value = p.preco;
-            document.getElementById('productOldPrice').value = p.preco_antigo || '';
-            document.getElementById('productCategory').value = p.categoria_id;
-            document.getElementById('productStock').value = p.estoque;
-            document.getElementById('productImage').value = p.imagem_principal;
-            document.getElementById('productDescription').value = p.descricao || '';
-            
-            document.getElementById('productModal').classList.add('show');
-          }
-        } catch (error) {
-          console.error('Erro:', error);
-          this.showToast('Erro ao carregar produto', 'error');
-        }
-      }
-
-      closeModal() {
-        document.getElementById('productModal').classList.remove('show');
-        this.currentProductId = null;
-      }
-
-      handleFormSubmit(e) {
-        e.preventDefault();
-
-        const formData = {
-          nome: document.getElementById('productName').value.trim(),
-          preco: parseFloat(document.getElementById('productPrice').value),
-          preco_antigo: document.getElementById('productOldPrice').value ? parseFloat(document.getElementById('productOldPrice').value) : null,
-          categoria_id: parseInt(document.getElementById('productCategory').value),
-          estoque: parseInt(document.getElementById('productStock').value),
-          imagem_principal: document.getElementById('productImage').value.trim(),
-          descricao: document.getElementById('productDescription').value.trim()
-        };
-
-        if (!formData.nome || !formData.imagem_principal) {
-          this.showToast('Preencha todos os campos obrigatórios', 'error');
-          return;
-        }
-
-        if (this.currentProductId) {
-          this.updateProduct(this.currentProductId, formData);
-        } else {
-          this.createProduct(formData);
-        }
-      }
-
-      formatMoney(value) {
-        return parseFloat(value).toFixed(2).replace('.', ',');
-      }
-
-      escapeHtml(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-      }
-
-      showToast(message, type = 'info') {
-        if (typeof storage !== 'undefined' && storage.showToast) {
-          storage.showToast(message, type);
-        } else {
-          alert(message);
-        }
-      }
-
-      init() {
-        this.loadProducts();
-
-        const form = document.getElementById('productForm');
-        if (form) {
-          form.addEventListener('submit', (e) => this.handleFormSubmit(e));
-        }
-
-        console.log('✅ Admin Produtos inicializado');
+      } catch (error) {
+        console.error('Erro ao carregar produtos:', error);
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#ff3b30;">❌ Erro ao carregar produtos. Verifique a API.</div>';
       }
     }
 
-    // Inicializar
-    const adminProdutos = new AdminProdutos();
-    window.adminProdutos = adminProdutos;
+    // ==========================================
+    // EDITAR PRODUTO
+    // ==========================================
+    async function editarProduto(id) {
+      try {
+        const response = await fetch(`${API_BASE}/produtos/detalhes.php?id=${id}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+          alert('❌ Erro ao carregar produto');
+          return;
+        }
+
+        const produto = data.data;
+        currentProductId = id;
+        
+        // Preencher modal
+        document.getElementById('modalTitle').textContent = 'Editar Produto';
+        document.getElementById('productName').value = produto.nome;
+        document.getElementById('productPrice').value = produto.preco;
+        document.getElementById('productOldPrice').value = produto.preco_antigo || '';
+        document.getElementById('productCategory').value = produto.categoria_id;
+        document.getElementById('productStock').value = produto.estoque;
+        document.getElementById('productImage').value = produto.imagem_principal;
+        document.getElementById('productDescription').value = produto.descricao || '';
+        
+        document.getElementById('productModal').classList.add('show');
+      } catch (error) {
+        console.error('Erro:', error);
+        alert('❌ Erro ao carregar dados do produto');
+      }
+    }
+
+    // ==========================================
+    // DELETAR PRODUTO
+    // ==========================================
+    async function deletarProduto(id, nome, estoque) {
+      const confirmMsg = estoque > 0 
+        ? `⚠️ ATENÇÃO: Este produto tem ${estoque} unidades em estoque!\n\nTem certeza que deseja deletar "${nome}"?`
+        : `Tem certeza que deseja deletar "${nome}"?`;
+      
+      if (!confirm(confirmMsg)) return;
+
+      try {
+        const response = await fetch(`${API_BASE}/admin/produtos/deletar.php`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showToast('✅ Produto deletado com sucesso!', 'success');
+          carregarProdutos();
+        } else {
+          showToast(data.message || 'Erro ao deletar', 'error');
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+        showToast('❌ Erro ao deletar produto', 'error');
+      }
+    }
+
+    // ==========================================
+    // MODAL
+    // ==========================================
+    function openAddModal() {
+      currentProductId = null;
+      document.getElementById('modalTitle').textContent = 'Novo Produto';
+      document.getElementById('productForm').reset();
+      document.getElementById('productModal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('productModal').classList.remove('show');
+      currentProductId = null;
+    }
+
+    // ==========================================
+    // SALVAR PRODUTO
+    // ==========================================
+    document.getElementById('productForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = {
+        nome: document.getElementById('productName').value.trim(),
+        preco: parseFloat(document.getElementById('productPrice').value),
+        preco_antigo: document.getElementById('productOldPrice').value ? parseFloat(document.getElementById('productOldPrice').value) : null,
+        categoria_id: parseInt(document.getElementById('productCategory').value),
+        estoque: parseInt(document.getElementById('productStock').value),
+        imagem_principal: document.getElementById('productImage').value.trim(),
+        descricao: document.getElementById('productDescription').value.trim()
+      };
+
+      if (!formData.nome || !formData.imagem_principal) {
+        alert('❌ Preencha todos os campos obrigatórios');
+        return;
+      }
+
+      try {
+        const endpoint = currentProductId 
+          ? `${API_BASE}/admin/produtos/atualizar.php`
+          : `${API_BASE}/admin/produtos/criar.php`;
+        
+        const body = currentProductId 
+          ? { id: currentProductId, ...formData }
+          : formData;
+
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showToast(currentProductId ? '✅ Produto atualizado!' : '✅ Produto criado!', 'success');
+          closeModal();
+          carregarProdutos();
+        } else {
+          showToast(data.message || 'Erro ao salvar', 'error');
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+        showToast('❌ Erro ao salvar produto', 'error');
+      }
+    });
+
+    // ==========================================
+    // TOAST
+    // ==========================================
+    function showToast(message, type = 'info') {
+      const colors = {
+        success: '#14d0d6',
+        error: '#ff3b30',
+        info: '#0ea5e9'
+      };
+
+      const toast = document.createElement('div');
+      toast.textContent = message;
+      toast.style.cssText = `
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: ${colors[type]};
+        color: ${type === 'error' ? '#fff' : '#000'};
+        padding: 16px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        z-index: 9999;
+        animation: slideIn 0.3s ease;
+      `;
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // ==========================================
+    // INICIALIZAR
+    // ==========================================
+    document.addEventListener('DOMContentLoaded', carregarProdutos);
+
+    // Expor funções globalmente
+    window.openAddModal = openAddModal;
+    window.closeModal = closeModal;
+    window.editarProduto = editarProduto;
+    window.deletarProduto = deletarProduto;
   </script>
+</body>
+</html>
 </body>
 </html>

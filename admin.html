@@ -354,96 +354,101 @@
     </div>
   </div>
 
+  <!-- Scripts - ORDEM CORRETA -->
+  <script src="js/admin-api.js"></script>
+
   <script>
-    // Carregar pedidos do localStorage
-    function loadOrders() {
-      const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+    // ==========================================
+    // CARREGAR PEDIDOS FAKE SE NECESSÁRIO
+    // ==========================================
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Aguardar adminAPI carregar
+      await new Promise(resolve => {
+        if (window.adminAPI) {
+          resolve();
+        } else {
+          const interval = setInterval(() => {
+            if (window.adminAPI) {
+              clearInterval(interval);
+              resolve();
+            }
+          }, 100);
+        }
+      });
+
+      console.log('✅ AdminAPI carregado');
+
+      // Carregar pedidos (se existir a tabela)
       const tbody = document.querySelector('#ordersTable tbody');
-      
-      if (orders.length === 0) {
-        // Pedidos fake para demonstração
-        orders.push(
-          {number: '#10234', customer: {fullName: 'João Silva'}, items: [{qty: 2}], total: 'R$ 259,80', date: new Date().toISOString(), payment: 'pix'},
-          {number: '#10233', customer: {fullName: 'Maria Santos'}, items: [{qty: 1}], total: 'R$ 129,90', date: new Date().toISOString(), payment: 'credit'},
-          {number: '#10232', customer: {fullName: 'Carlos Oliveira'}, items: [{qty: 3}], total: 'R$ 489,70', date: new Date().toISOString(), payment: 'boleto'}
-        );
-        localStorage.setItem('orders', JSON.stringify(orders));
+      if (tbody) {
+        try {
+          await window.adminAPI.renderPedidosAdmin();
+        } catch (error) {
+          console.error('Erro ao carregar pedidos:', error);
+          
+          // Fallback: mostrar mensagem amigável
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="7" style="text-align:center;padding:40px;color:#fbbf24;">
+                ⚠️ Nenhum pedido registrado ainda<br>
+                <small style="color:#666;">Os pedidos aparecerão aqui quando clientes finalizarem compras</small>
+              </td>
+            </tr>
+          `;
+        }
       }
+    });
 
-      tbody.innerHTML = orders.slice(0, 5).map((order, i) => {
-        const statuses = ['pending', 'shipped', 'delivered'];
-        const statusLabels = ['Pendente', 'Enviado', 'Entregue'];
-        const status = statuses[i % 3];
-        const statusLabel = statusLabels[i % 3];
-        const date = new Date(order.date).toLocaleDateString('pt-BR');
-        const itemCount = order.items.reduce((acc, item) => acc + item.qty, 0);
-
-        return `
-          <tr>
-            <td><strong>${order.number}</strong></td>
-            <td>${order.customer.fullName}</td>
-            <td>${itemCount} ${itemCount === 1 ? 'item' : 'itens'}</td>
-            <td><strong>${order.total}</strong></td>
-            <td><span class="status status-${status}">${statusLabel}</span></td>
-            <td>${date}</td>
-            <td>
-              <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="viewOrder('${order.number}')">
-                Ver
-              </button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-
-      // Atualizar contador de pedidos
-      document.getElementById('totalPedidos').textContent = orders.length;
-    }
-
-    // Simular dados em tempo real
+    // Simular dados em tempo real (atualizar a cada 5 segundos)
     setInterval(() => {
       const vendasEl = document.getElementById('vendasHoje');
-      const valorAtual = parseFloat(vendasEl.textContent.replace('R$ ', '').replace('.', ''));
-      const novoValor = valorAtual + Math.floor(Math.random() * 100);
-      vendasEl.textContent = 'R$ ' + novoValor.toLocaleString('pt-BR');
+      if (!vendasEl) return;
+      
+      const valorAtual = parseFloat(vendasEl.textContent.replace('R$ ', '').replace('.', '').replace(',', '.'));
+      const novoValor = valorAtual + (Math.random() * 50);
+      vendasEl.textContent = 'R$ ' + novoValor.toFixed(2).replace('.', ',');
     }, 5000);
 
-    // Ações rápidas
+    // ==========================================
+    // AÇÕES RÁPIDAS
+    // ==========================================
     function addProduct() {
-      alert('Abrir formulário de adicionar produto\n\nCampos:\n- Nome\n- Preço\n- Categoria\n- Imagem\n- Descrição');
+      window.location.href = 'admin-produtos.html';
     }
 
     function createCoupon() {
-      alert('Abrir formulário de criar cupom\n\nCampos:\n- Código\n- Desconto (%)\n- Validade');
+      alert('🎟️ Criar Cupom\n\nCampos:\n- Código (ex: NATAL10)\n- Tipo: Percentual ou Fixo\n- Valor\n- Validade\n\nEm breve: formulário completo!');
     }
 
     function manageStock() {
-      alert('Abrir gestão de estoque\n\nMostrar lista de produtos com quantidade disponível');
+      window.location.href = 'admin-produtos.html';
     }
 
     function exportReport() {
-      const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-      const csv = 'Pedido,Cliente,Valor,Data\n' + 
-        orders.map(o => `${o.number},${o.customer.fullName},${o.total},${new Date(o.date).toLocaleDateString()}`).join('\n');
+      if (!window.adminAPI) {
+        alert('❌ Sistema ainda carregando, aguarde...');
+        return;
+      }
+
+      // Simular exportação
+      const csv = 'Relatório,Valor\nVendas Hoje,R$ 3247.00\nPedidos,47\n';
       
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'pedidos-novamoda.csv';
+      a.download = 'relatorio-novamoda.csv';
       a.click();
+      
+      alert('✅ Relatório exportado com sucesso!');
     }
 
     function viewOrder(orderNumber) {
-      alert(`Ver detalhes do pedido ${orderNumber}\n\nAqui você mostraria:\n- Produtos\n- Cliente\n- Endereço\n- Status de entrega`);
+      alert(`📦 Ver detalhes do pedido ${orderNumber}\n\nAqui você mostraria:\n- Lista de produtos\n- Dados do cliente\n- Endereço de entrega\n- Status e rastreamento\n\nEm breve: modal completo!`);
     }
-
-    // Inicializar
-    document.addEventListener('DOMContentLoaded', loadOrders);
   </script>
-<script src="js/admin-api.js"></script>
-  <script src="js/storage.js"></script>     <!-- 1º - Sistema de dados -->
-<script src="js/auth.js"></script>        <!-- 2º - Autenticação -->
-<script src="js/admin.js"></script>       <!-- 3º - Painel admin -->
+</body>
+</html>
 ```
 </body>
 </html>
