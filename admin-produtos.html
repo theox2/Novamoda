@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciar Produtos - NovaModa Admin</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { display: flex; margin: 0; background: #0a0a0a; font-family: 'Inter', sans-serif; }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: #111;
+      height: 100vh;
+      position: fixed;
+      border-right: 1px solid #222;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .sidebar .logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #14d0d6;
+      margin-bottom: 40px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #222;
+    }
+
+    .menu-item {
+      padding: 12px 16px;
+      margin: 8px 0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #aaa;
+      text-decoration: none;
+    }
+
+    .menu-item:hover, .menu-item.active {
+      background: rgba(20, 208, 214, 0.1);
+      color: #14d0d6;
+    }
+
+    /* Main Content */
+    .main-content {
+      margin-left: 260px;
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+      height: 100vh;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+
+    .header h1 { font-size: 2rem; margin: 0; color: #fff; }
+
+    .btn-add {
+      padding: 12px 24px;
+      background: #14d0d6;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-add:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(20, 208, 214, 0.4);
+    }
+
+    /* Grid de Produtos */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .product-card {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+
+    .product-card:hover {
+      border-color: #14d0d6;
+      transform: translateY(-4px);
+    }
+
+    .product-image {
+      width: 100%;
+      height: 280px;
+      object-fit: cover;
+      background: #0a0a0a;
+    }
+
+    .product-info {
+      padding: 20px;
+    }
+
+    .product-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .product-price {
+      font-size: 1.5rem;
+      color: #14d0d6;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .product-meta {
+      display: flex;
+      gap: 15px;
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 15px;
+    }
+
+    .product-stock {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .stock-high { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
+    .stock-low { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+    .stock-out { background: rgba(255, 59, 48, 0.2); color: #ff3b30; }
+
+    .product-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+      font-size: 13px;
+      flex: 1;
+    }
+
+    .btn-primary {
+      background: #14d0d6;
+      color: #000;
+    }
+
+    .btn-danger {
+      background: rgba(255, 59, 48, 0.2);
+      color: #ff3b30;
+    }
+
+    /* Modal */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #111;
+      padding: 40px;
+      border-radius: 12px;
+      max-width: 600px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      border: 1px solid #222;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      color: #fff;
+    }
+
+    .close-modal {
+      background: transparent;
+      border: none;
+      color: #888;
+      font-size: 28px;
+      cursor: pointer;
+    }
+
+    .close-modal:hover {
+      color: #ff3b30;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      color: #888;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      background: #0a0a0a;
+      border: 1px solid #333;
+      color: #fff;
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    @media(max-width: 968px) {
+      .sidebar { display: none; }
+      .main-content { margin-left: 0; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">👕 NovaModa Admin</div>
+    <a href="admin.html" class="menu-item">
+      <span>📊</span> Dashboard
+    </a>
+    <a href="admin-pedidos.html" class="menu-item">
+      <span>📦</span> Pedidos
+    </a>
+    <a href="admin-produtos.html" class="menu-item active">
+      <span>👕</span> Produtos
+    </a>
+    <a href="admin-clientes.html" class="menu-item">
+      <span>👥</span> Clientes
+    </a>
+    <a href="admin-relatorios.html" class="menu-item">
+      <span>📈</span> Relatórios
+    </a>
+    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #222;">
+      <a href="index.html" class="menu-item">
+        <span>🏠</span> Voltar ao Site
+      </a>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Dentro do main-content, adicionar: -->
+<div class="section">
+  <div class="section-header">
+    <h2 class="section-title">Produtos Cadastrados</h2>
+    <button class="btn btn-primary" onclick="mostrarFormularioProduto()">
+      + Novo Produto
+    </button>
+  </div>
+  
+  <div class="produtos-grid" id="productsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px;">
+    <!-- Produtos serão carregados aqui pelo JavaScript -->
+  </div>
+</div>
+    <div class="header">
+      <h1>Gerenciar Produtos</h1>
+      <button class="btn-add" onclick="adminProdutos.openAddModal()">+ Novo Produto</button>
+    </div>
+
+    <!-- Grid de Produtos -->
+    <div class="products-grid" id="productsGrid">
+      <div style="grid-column:1/-1;text-align:center;padding:60px;color:#888;">
+        <div style="font-size:3rem;margin-bottom:20px;">⏳</div>
+        <h3>Carregando produtos...</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="productModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Novo Produto</h2>
+        <button class="close-modal" onclick="adminProdutos.closeModal()">×</button>
+      </div>
+
+      <form id="productForm">
+        <div class="form-group">
+          <label>Nome do Produto *</label>
+          <input type="text" id="productName" required placeholder="Ex: Camiseta Oversized Street">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Preço (R$) *</label>
+            <input type="number" id="productPrice" required step="0.01" placeholder="129.90">
+          </div>
+
+          <div class="form-group">
+            <label>Preço Antigo (R$)</label>
+            <input type="number" id="productOldPrice" step="0.01" placeholder="179.90">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Categoria *</label>
+            <select id="productCategory" required>
+              <option value="">Selecione...</option>
+              <option value="1">Masculino</option>
+              <option value="2">Feminino</option>
+              <option value="3">Infantil</option>
+              <option value="4">Acessórios</option>
+              <option value="5">Calçados</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Estoque *</label>
+            <input type="number" id="productStock" required min="0" placeholder="50">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>URL da Imagem *</label>
+          <input type="url" id="productImage" required placeholder="https://images.unsplash.com/...">
+        </div>
+
+        <div class="form-group">
+          <label>Descrição</label>
+          <textarea id="productDescription" placeholder="Descreva o produto..."></textarea>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:30px;">
+          <button type="submit" class="btn btn-primary" style="flex:1;padding:14px;">Salvar Produto</button>
+          <button type="button" class="btn btn-danger" onclick="adminProdutos.closeModal()" style="padding:14px 20px;">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/storage.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/admin.js"></script>
+  
+  <script>
+    /**
+     * Admin Produtos - CORRIGIDO COM API PHP
+     */
+    class AdminProdutos {
+      constructor() {
+        this.API_BASE = '/api/admin/produtos';
+        this.API_PRODUTOS = '/api/produtos/listar.php';
+        this.currentProductId = null;
+        this.init();
+      }
+
+      async loadProducts() {
+        try {
+          const response = await fetch(this.API_PRODUTOS);
+          const data = await response.json();
+          
+          if (data.success) {
+            this.renderProducts(data.data);
+          } else {
+            this.showToast('Erro ao carregar produtos', 'error');
+          }
+        } catch (error) {
+          console.error('Erro:', error);
+          this.showToast('Erro de conexão', 'error');
+        }
+      }
+
+      renderProducts(products) {
+        const grid = document.getElementById('productsGrid');
+        
+        if (products.length === 0) {
+          grid.innerHTML = `
+            <div style="grid-column:1/-1;text-align:center;padding:60px;color:#888;">
+              <div style="font-size:4rem;margin-bottom:20px;">📦</div>
+              <h3>Nenhum produto cadastrado</h3>
+              <p>Clique em "Novo Produto" para adicionar</p>
+            </div>
+          `;
+          return;
+        }
+
+        grid.innerHTML = products.map(p => {
+          const stockStatus = this.getStockStatus(p.estoque);
+          
+          return `
+            <div class="product-card">
+              <img src="${p.imagem_principal || 'https://via.placeholder.com/400'}" 
+                   alt="${p.nome}" 
+                   class="product-image">
+              <div class="product-info">
+                <div class="product-name">${this.escapeHtml(p.nome)}</div>
+                <div class="product-price">
+                  R$ ${this.formatMoney(p.preco)}
+                  ${p.preco_antigo ? `<span style="font-size:14px;color:#666;text-decoration:line-through;margin-left:8px;">R$ ${this.formatMoney(p.preco_antigo)}</span>` : ''}
+                </div>
+                <div class="product-meta">
+                  <span>Categoria: ${p.categoria_nome || 'Sem categoria'}</span>
+                </div>
+                <span class="product-stock ${stockStatus.class}">${stockStatus.label}: ${p.estoque}</span>
+                <div class="product-actions" style="margin-top:15px;">
+                  <button class="btn btn-primary" onclick="adminProdutos.editProduct(${p.id})">Editar</button>
+                  <button class="btn btn-danger" onclick="adminProdutos.deleteProduct(${p.id})">Excluir</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      getStockStatus(estoque) {
+        if (estoque === 0) return { class: 'stock-out', label: 'Sem Estoque' };
+        if (estoque <= 10) return { class: 'stock-low', label: 'Estoque Baixo' };
+        return { class: 'stock-high', label: 'Em Estoque' };
+      }
+
+      async createProduct(formData) {
+        try {
+          const response = await fetch(`${this.API_BASE}/criar.php`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            this.showToast('✓ Produto criado com sucesso!', 'success');
+            this.closeModal();
+            this.loadProducts();
+          } else {
+            this.showToast(data.message || 'Erro ao criar produto', 'error');
+          }
+        } catch (error) {
+          console.error('Erro:', error);
+          this.showToast('Erro de conexão', 'error');
+        }
+      }
+
+      async updateProduct(id, formData) {
+        try {
+          const response = await fetch(`${this.API_BASE}/atualizar.php`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, ...formData })
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            this.showToast('✓ Produto atualizado!', 'success');
+            this.closeModal();
+            this.loadProducts();
+          } else {
+            this.showToast(data.message || 'Erro ao atualizar', 'error');
+          }
+        } catch (error) {
+          console.error('Erro:', error);
+          this.showToast('Erro de conexão', 'error');
+        }
+      }
+
+      async deleteProduct(id) {
+        if (!confirm('⚠️ Tem certeza que deseja deletar este produto?')) return;
+
+        try {
+          const response = await fetch(`${this.API_BASE}/deletar.php`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            this.showToast('✓ Produto deletado!', 'success');
+            this.loadProducts();
+          } else {
+            this.showToast(data.message || 'Erro ao deletar', 'error');
+          }
+        } catch (error) {
+          console.error('Erro:', error);
+          this.showToast('Erro de conexão', 'error');
+        }
+      }
+
+      openAddModal() {
+        this.currentProductId = null;
+        document.getElementById('modalTitle').textContent = 'Novo Produto';
+        document.getElementById('productForm').reset();
+        document.getElementById('productModal').classList.add('show');
+      }
+
+      async editProduct(id) {
+        this.currentProductId = id;
+        document.getElementById('modalTitle').textContent = 'Editar Produto';
+        
+        try {
+          const response = await fetch(`/api/produtos/detalhes.php?id=${id}`);
+          const data = await response.json();
+          
+          if (data.success) {
+            const p = data.data;
+            
+            document.getElementById('productName').value = p.nome;
+            document.getElementById('productPrice').value = p.preco;
+            document.getElementById('productOldPrice').value = p.preco_antigo || '';
+            document.getElementById('productCategory').value = p.categoria_id;
+            document.getElementById('productStock').value = p.estoque;
+            document.getElementById('productImage').value = p.imagem_principal;
+            document.getElementById('productDescription').value = p.descricao || '';
+            
+            document.getElementById('productModal').classList.add('show');
+          }
+        } catch (error) {
+          console.error('Erro:', error);
+          this.showToast('Erro ao carregar produto', 'error');
+        }
+      }
+
+      closeModal() {
+        document.getElementById('productModal').classList.remove('show');
+        this.currentProductId = null;
+      }
+
+      handleFormSubmit(e) {
+        e.preventDefault();
+
+        const formData = {
+          nome: document.getElementById('productName').value.trim(),
+          preco: parseFloat(document.getElementById('productPrice').value),
+          preco_antigo: document.getElementById('productOldPrice').value ? parseFloat(document.getElementById('productOldPrice').value) : null,
+          categoria_id: parseInt(document.getElementById('productCategory').value),
+          estoque: parseInt(document.getElementById('productStock').value),
+          imagem_principal: document.getElementById('productImage').value.trim(),
+          descricao: document.getElementById('productDescription').value.trim()
+        };
+
+        if (!formData.nome || !formData.imagem_principal) {
+          this.showToast('Preencha todos os campos obrigatórios', 'error');
+          return;
+        }
+
+        if (this.currentProductId) {
+          this.updateProduct(this.currentProductId, formData);
+        } else {
+          this.createProduct(formData);
+        }
+      }
+
+      formatMoney(value) {
+        return parseFloat(value).toFixed(2).replace('.', ',');
+      }
+
+      escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+      showToast(message, type = 'info') {
+        if (typeof storage !== 'undefined' && storage.showToast) {
+          storage.showToast(message, type);
+        } else {
+          alert(message);
+        }
+      }
+
+      init() {
+        this.loadProducts();
+
+        const form = document.getElementById('productForm');
+        if (form) {
+          form.addEventListener('submit', (e) => this.handleFormSubmit(e));
+        }
+
+        console.log('✅ Admin Produtos inicializado');
+      }
+    }
+
+    // Inicializar
+    const adminProdutos = new AdminProdutos();
+    window.adminProdutos = adminProdutos;
+  </script>
+</body>
+</html>

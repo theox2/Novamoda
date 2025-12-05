@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Categorias – NovaModa</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .container-categorias {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 140px 20px 80px;
+    }
+
+    .breadcrumb {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 40px;
+      font-size: 14px;
+      color: #666;
+      align-items: center;
+      animation: fadeInDown 0.6s ease;
+    }
+    
+    .breadcrumb a {
+      color: #14d0d6;
+      text-decoration: none;
+      transition: all .2s;
+      position: relative;
+    }
+    
+    .breadcrumb a::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: #14d0d6;
+      transition: width .3s;
+    }
+    
+    .breadcrumb a:hover::after {
+      width: 100%;
+    }
+
+    .page-header {
+      margin-bottom: 50px;
+      text-align: center;
+      position: relative;
+      padding: 40px 0;
+      animation: fadeInUp 0.8s ease;
+    }
+    
+    .page-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 4px;
+      background: linear-gradient(90deg, transparent, #14d0d6, transparent);
+      border-radius: 2px;
+    }
+    
+    .page-title {
+      font-size: 3.5rem;
+      background: linear-gradient(135deg, #fff 0%, #14d0d6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 20px 0 15px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      line-height: 1.1;
+    }
+    
+    .categoria-desc {
+      color: #888;
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .filters-bar {
+      display: flex;
+      gap: 20px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+      padding: 30px;
+      background: linear-gradient(135deg, rgba(17,17,17,0.95) 0%, rgba(11,11,11,0.95) 100%);
+      backdrop-filter: blur(20px);
+      border-radius: 16px;
+      border: 1px solid rgba(20, 208, 214, 0.1);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+      animation: slideInUp 0.8s ease 0.2s both;
+    }
+    
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 180px;
+      flex: 1;
+    }
+    
+    .filter-group label {
+      font-size: 11px;
+      color: #14d0d6;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    
+    .filter-select {
+      padding: 14px 18px;
+      background: #000;
+      border: 2px solid #222;
+      border-radius: 10px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      transition: all .3s cubic-bezier(.4,0,.2,1);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2314d0d6' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 15px center;
+      padding-right: 45px;
+    }
+    
+    .filter-select:hover {
+      border-color: #14d0d6;
+      background-color: rgba(20,208,214,0.05);
+      transform: translateY(-2px);
+    }
+    
+    .filter-select:focus {
+      outline: none;
+      border-color: #14d0d6;
+      box-shadow: 0 0 0 3px rgba(20,208,214,0.15);
+    }
+    
+    .results-count {
+      margin-left: auto;
+      padding: 14px 20px;
+      background: rgba(20,208,214,0.1);
+      border: 1px solid rgba(20,208,214,0.2);
+      border-radius: 10px;
+      color: #14d0d6;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .produtos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 30px;
+      margin-bottom: 80px;
+      animation: fadeIn 0.8s ease 0.4s both;
+    }
+    
+    .produto {
+      background: linear-gradient(135deg, #111 0%, #0a0a0a 100%);
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all .4s cubic-bezier(.4,0,.2,1);
+      border: 1px solid #222;
+      position: relative;
+      transform-origin: center;
+    }
+    
+    .produto::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      background: linear-gradient(45deg, #14d0d6, #0ea5e9, #14d0d6);
+      border-radius: 16px;
+      opacity: 0;
+      z-index: -1;
+      transition: opacity .4s;
+    }
+    
+    .produto:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 20px 60px rgba(20, 208, 214, 0.25), 0 0 80px rgba(20, 208, 214, 0.1);
+      border-color: transparent;
+    }
+    
+    .produto:hover::before {
+      opacity: 1;
+    }
+    
+    .produto-img-wrapper {
+      position: relative;
+      width: 100%;
+      height: 360px;
+      overflow: hidden;
+      background: #000;
+    }
+    
+    .produto img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform .6s cubic-bezier(.4,0,.2,1);
+    }
+    
+    .produto:hover img {
+      transform: scale(1.15) rotate(2deg);
+    }
+    
+    .produto-badge {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      background: linear-gradient(135deg, #14d0d6, #0ea5e9);
+      color: #000;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 15px rgba(20,208,214,0.5), 0 0 30px rgba(20,208,214,0.3);
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    
+    .produto-fav {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(10px);
+      color: #fff;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      transition: all .3s cubic-bezier(.4,0,.2,1);
+      z-index: 10;
+    }
+    
+    .produto-fav:hover {
+      background: rgba(20,208,214,0.2);
+      border-color: #14d0d6;
+      transform: scale(1.15) rotate(12deg);
+    }
+    
+    .produto-fav.active {
+      background: linear-gradient(135deg, #14d0d6, #0ea5e9);
+      color: #000;
+      border-color: transparent;
+      animation: heartbeat 0.6s ease;
+    }
+    
+    @keyframes heartbeat {
+      0%, 100% { transform: scale(1); }
+      25% { transform: scale(1.3); }
+      50% { transform: scale(1.1); }
+      75% { transform: scale(1.25); }
+    }
+    
+    .produto-info {
+      padding: 20px;
+      background: linear-gradient(180deg, rgba(11,11,11,0.95) 0%, rgba(17,17,17,0.95) 100%);
+    }
+    
+    .produto-name {
+      font-size: 17px;
+      color: #fff;
+      margin-bottom: 12px;
+      font-weight: 700;
+      line-height: 1.3;
+      transition: color .3s;
+    }
+    
+    .produto:hover .produto-name {
+      color: #14d0d6;
+    }
+    
+    .produto-price {
+      font-size: 26px;
+      background: linear-gradient(135deg, #14d0d6, #0ea5e9);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 900;
+      display: inline-block;
+    }
+    
+    .produto-price-old {
+      font-size: 15px;
+      color: #555;
+      text-decoration: line-through;
+      margin-left: 10px;
+      font-weight: 400;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 120px 20px;
+      color: #666;
+      display: none;
+      animation: fadeIn 0.6s ease;
+    }
+    
+    .empty-state.show {
+      display: block;
+    }
+    
+    .empty-state::before {
+      content: '🔍';
+      display: block;
+      font-size: 80px;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+    
+    .empty-state h3 {
+      font-size: 2rem;
+      margin-bottom: 15px;
+      color: #aaa;
+      font-weight: 700;
+    }
+    
+    .empty-state p {
+      font-size: 1.1rem;
+      color: #666;
+      max-width: 400px;
+      margin: 0 auto 30px;
+      line-height: 1.6;
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes slideInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .produto.animate {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    
+    .produto.show {
+      animation: productAppear 0.6s cubic-bezier(.4,0,.2,1) forwards;
+    }
+    
+    @keyframes productAppear {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media(max-width: 968px) {
+      .container-categorias { padding-top: 120px; }
+      .page-title { font-size: 2.5rem; }
+      .produtos-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+      .filters-bar { padding: 20px; }
+      .filter-group { min-width: 140px; }
+    }
+    
+    @media(max-width: 768px) {
+      .page-title { font-size: 2rem; }
+      .produtos-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+      .produto-img-wrapper { height: 280px; }
+      .filters-bar { flex-direction: column; align-items: stretch; gap: 15px; }
+      .filter-group { width: 100%; min-width: auto; }
+      .results-count { margin-left: 0; text-align: center; }
+    }
+    
+    @media(max-width: 520px) {
+      .produtos-grid { grid-template-columns: 1fr; }
+      .produto-img-wrapper { height: 320px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="loader"><div class="spinner"></div></div>
+
+  <header class="header">
+    <div class="header-container">
+      <div class="logo-area" onclick="location.href='index.html'">
+        <img src="Yellow_Black_Brush_Streetwear_Brand_Logo-removebg-preview.png" class="logo" alt="NovaModa">
+        <span class="brand">NovaModa</span>
+      </div>
+      
+      <nav class="nav-desktop" id="navDesktop">
+        <div class="nav-item">
+          <a href="index.html#novidades" class="nav-link">Novidades</a>
+        </div>
+        <div class="nav-item dropdown" id="catDropdown">
+          <a href="#" class="dropdown-toggle nav-link">Categorias</a>
+          <div class="mega-menu">
+            <div class="mega-col">
+              <h4>Por público</h4>
+              <a href="categorias.html?cat=masculino">Masculino</a>
+              <a href="categorias.html?cat=feminino">Feminino</a>
+              <a href="categorias.html?cat=infantil">Infantil</a>
+            </div>
+          </div>
+        </div>
+        <div class="nav-item">
+          <a href="index.html#promocoes" class="nav-link">Promoções</a>
+        </div>
+      </nav>
+
+      <div class="right-area">
+        <div class="search-wrapper">
+          <input id="headerSearch" type="search" placeholder="Buscar produtos...">
+          <button id="searchBtn">🔍</button>
+        </div>
+        <div id="smartSearchResults" class="smart-search-results"></div>
+        <a class="btn entrar-btn" href="login.html">Entrar</a>
+        <div class="icons">
+          <span class="icon" onclick="location.href='favoritos.html'">❤</span>
+          <span class="icon" onclick="location.href='carrinho.html'">🛒<span class="cart-count">0</span></span>
+          <span class="icon" id="menuBtnMobile">☰</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="index.html#novidades">Novidades</a>
+      <a href="categorias.html">Categorias</a>
+      <a href="index.html#promocoes">Promoções</a>
+      <a href="login.html">Entrar</a>
+    </div>
+  </header>
+
+  <main class="container-categorias">
+    <div class="breadcrumb">
+      <a href="index.html">Home</a>
+      <span>›</span>
+      <span id="breadcrumbCat">Categorias</span>
+    </div>
+
+    <div class="page-header">
+      <h1 class="page-title" id="pageTitle">Todos os Produtos</h1>
+      <p class="categoria-desc" id="categoriaDesc">Explore nossa coleção completa</p>
+    </div>
+
+    <div class="filters-bar">
+      <div class="filter-group">
+        <label>Ordenar por</label>
+        <select class="filter-select" id="sortSelect">
+          <option value="relevancia">Relevância</option>
+          <option value="menor-preco">Menor Preço</option>
+          <option value="maior-preco">Maior Preço</option>
+          <option value="nome">Nome A-Z</option>
+          <option value="novidades">Novidades</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label>Marca</label>
+        <select class="filter-select" id="marcaSelect">
+          <option value="">Todas</option>
+          <option value="nike">Nike</option>
+          <option value="adidas">Adidas</option>
+          <option value="puma">Puma</option>
+          <option value="vans">Vans</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Preço</label>
+        <select class="filter-select" id="precoSelect">
+          <option value="">Todos</option>
+          <option value="0-100">Até R$100</option>
+          <option value="100-200">R$100 - R$200</option>
+          <option value="200-300">R$200 - R$300</option>
+          <option value="300-500">R$300 - R$500</option>
+          <option value="500+">Acima de R$500</option>
+        </select>
+      </div>
+
+      <span class="results-count" id="resultsCount">0 produtos</span>
+    </div>
+
+    <div class="produtos-grid" id="listaProdutos"></div>
+
+    <div class="empty-state" id="emptyState">
+      <h3>😕 Nenhum produto encontrado</h3>
+      <p>Tente ajustar os filtros ou explore outras categorias</p>
+    </div>
+  </main>
+
+  <script src="js/storage.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/animations.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/favorites.js"></script>
+  <script src="js/app.js"></script>
+
+  <script>
+    const todosProdutos = [
+      {id:1, name:'Camiseta Oversized Street', price:129.90, oldPrice:179.90, img:'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800', categoria:'masculino', marca:'nike', badge:'NOVO'},
+      {id:2, name:'Moletom Premium Black', price:249.90, img:'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800', categoria:'masculino', marca:'adidas'},
+      {id:3, name:'Calça Cargo Utility', price:189.90, img:'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=800', categoria:'masculino', marca:'puma', categoria2:'calcas'},
+      {id:4, name:'Jaqueta Bomber Vintage', price:299.90, oldPrice:399.90, img:'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800', categoria:'masculino', marca:'vans', badge:'SALE', categoria2:'jaquetas'},
+      {id:5, name:'Tênis Air Classic', price:599.90, img:'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800', categoria:'calcados', marca:'nike'},
+      {id:6, name:'Boné Snapback Logo', price:79.90, img:'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800', categoria:'acessorios', marca:'nike', categoria2:'bones'},
+      {id:7, name:'Cropped Top Sport', price:99.90, img:'https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=800', categoria:'feminino', marca:'adidas'},
+      {id:8, name:'Legging High Waist', price:149.90, img:'https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=800', categoria:'feminino', marca:'puma'},
+      {id:9, name:'Shorts Cargo Kids', price:89.90, img:'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?w=800', categoria:'infantil', marca:'nike', categoria2:'shorts'},
+      {id:10, name:'Mochila Urban Pro', price:159.90, img:'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800', categoria:'acessorios', marca:'vans', categoria2:'bolsas'}
+    ];
+
+    let produtosFiltrados = [...todosProdutos];
+    let favoritosList = JSON.parse(localStorage.getItem('favorites') || '[]');
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoria = urlParams.get('cat');
+    const marca = urlParams.get('marca');
+    const busca = urlParams.get('search');
+
+    function atualizarTitulo() {
+      const titleEl = document.getElementById('pageTitle');
+      const descEl = document.getElementById('categoriaDesc');
+      const breadcrumbEl = document.getElementById('breadcrumbCat');
+      
+      const titulos = {
+        'masculino': ['Moda Masculina', 'Produtos selecionados para o público masculino'],
+        'feminino': ['Moda Feminina', 'Estilo e elegância para você'],
+        'infantil': ['Moda Infantil', 'Conforto e diversão para os pequenos'],
+        'acessorios': ['Acessórios', 'Complete seu look com estilo']
+      };
+
+      if (busca) {
+        titleEl.textContent = `Busca: "${busca}"`;
+        descEl.textContent = 'Resultados da sua pesquisa';
+        breadcrumbEl.textContent = 'Busca';
+      } else if (categoria) {
+        const [titulo, desc] = titulos[categoria] || [categoria, `Produtos de ${categoria}`];
+        titleEl.textContent = titulo;
+        descEl.textContent = desc;
+        breadcrumbEl.textContent = titulo;
+      }
+    }
+
+    function filtrarProdutos() {
+      produtosFiltrados = [...todosProdutos];
+      
+      if (categoria) {
+        produtosFiltrados = produtosFiltrados.filter(p => p.categoria === categoria || p.categoria2 === categoria);
+      }
+      
+      const marcaSelecionada = marca || document.getElementById('marcaSelect').value;
+      if (marcaSelecionada) {
+        produtosFiltrados = produtosFiltrados.filter(p => p.marca.toLowerCase() === marcaSelecionada.toLowerCase());
+      }
+
+      if (busca) {
+        const termo = busca.toLowerCase();
+        produtosFiltrados = produtosFiltrados.filter(p => p.name.toLowerCase().includes(termo));
+      }
+      
+      const precoRange = document.getElementById('precoSelect').value;
+      if (precoRange) {
+        const [min, max] = precoRange.split('-');
+        const minVal = parseFloat(min);
+        const maxVal = max === '+' ? Infinity : parseFloat(max);
+        produtosFiltrados = produtosFiltrados.filter(p => p.price >= minVal && p.price <= maxVal);
+      }
+      
+      const sort = document.getElementById('sortSelect').value;
+      switch(sort) {
+        case 'menor-preco': produtosFiltrados.sort((a,b) => a.price - b.price); break;
+        case 'maior-preco': produtosFiltrados.sort((a,b) => b.price - a.price); break;
+        case 'nome': produtosFiltrados.sort((a,b) => a.name.localeCompare(b.name)); break;
+        case 'novidades': produtosFiltrados.sort((a,b) => b.id - a.id); break;
+      }
+      
+      renderizarProdutos();
+    }
+
+    function renderizarProdutos() {
+      const grid = document.getElementById('listaProdutos');
+      const emptyState = document.getElementById('emptyState');
+      const resultsCount = document.getElementById('resultsCount');
+      
+      resultsCount.textContent = `${produtosFiltrados.length} produto${produtosFiltrados.length !== 1 ? 's' : ''}`;
+      
+      if (produtosFiltrados.length === 0) {
+        grid.style.display = 'none';
+        emptyState.classList.add('show');
+        return;
+      }
+      
+      grid.style.display = 'grid';
+      emptyState.classList.remove('show');
+      
+      grid.innerHTML = produtosFiltrados.map(p => {
+        const isFavorito = favoritosList.includes(p.id);
+        return `
+          <article class="produto animate" onclick="abrirProduto(${p.id})">
+            <div class="produto-img-wrapper">
+              <img src="${p.img}" alt="${p.name}" loading="lazy">
+              ${p.badge ? `<span class="produto-badge">${p.badge}</span>` : ''}
+              <span class="produto-fav ${isFavorito ? 'active' : ''}" 
+                    onclick="event.stopPropagation();toggleFavoritoPage(${p.id})"
+                    data-fav="${p.id}">
+                ${isFavorito ? '❤' : '♡'}
+              </span>
+            </div>
+            <div class="produto-info">
+              <div class="produto-name">${p.name}</div>
+              <div>
+                <span class="produto-price">R$ ${p.price.toFixed(2).replace('.', ',')}</span>
+                ${p.oldPrice ? `<span class="produto-price-old">R$ ${p.oldPrice.toFixed(2).replace('.', ',')}</span>` : ''}
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      setTimeout(() => {
+        document.querySelectorAll('.animate').forEach(el => el.classList.add('show'));
+      }, 50);
+    }
+
+    window.abrirProduto = function(id) {
+      window.location.href = `produto.html?id=${id}`;
+    };
+
+    window.toggleFavoritoPage = function(id) {
+      if (typeof toggleFavorite === 'function') {
+        toggleFavorite(id);
+      } else {
+        if (favoritosList.includes(id)) {
+          favoritosList = favoritosList.filter(f => f !== id);
+        } else {
+          favoritosList.push(id);
+        }
+        localStorage.setItem('favorites', JSON.stringify(favoritosList));
+      }
+      
+      const btn = document.querySelector(`[data-fav="${id}"]`);
+      if (btn) {
+        const isFavorito = favoritosList.includes(id);
+        btn.classList.toggle('active', isFavorito);
+        btn.textContent = isFavorito ? '❤' : '♡';
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      atualizarTitulo();
+      filtrarProdutos();
+      
+      document.getElementById('sortSelect').addEventListener('change', filtrarProdutos);
+      document.getElementById('marcaSelect').addEventListener('change', filtrarProdutos);
+      document.getElementById('precoSelect').addEventListener('change', filtrarProdutos);
+      
+      if (marca) {
+        document.getElementById('marcaSelect').value = marca.toLowerCase();
+      }
+    });
+  </script>
+</body>
+</html>
